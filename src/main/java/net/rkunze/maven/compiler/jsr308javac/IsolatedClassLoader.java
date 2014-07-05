@@ -1,4 +1,4 @@
-package org.codehaus.plexus.compiler.javac;
+package net.rkunze.maven.compiler.jsr308javac;
 
 /**
  * The MIT License

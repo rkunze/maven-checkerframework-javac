@@ -1,4 +1,4 @@
-package org.codehaus.plexus.compiler.javac;
+package net.rkunze.maven.compiler.jsr308javac;
 
 /**
  * The MIT License
@@ -24,6 +24,7 @@ package org.codehaus.plexus.compiler.javac;
  * SOFTWARE.
  */
 
+import net.rkunze.maven.compiler.jsr308javac.JavacCompiler;
 import org.codehaus.plexus.compiler.AbstractCompilerTest;
 import org.codehaus.plexus.compiler.CompilerConfiguration;
 import org.codehaus.plexus.util.StringUtils;
@@ -55,7 +56,7 @@ public abstract class AbstractJavacCompilerTest
 
     protected String getRoleHint()
     {
-        return "javac";
+        return "javac+jsr308";
     }
 
     protected int expectedErrors()

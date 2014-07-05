@@ -1,4 +1,4 @@
-package org.codehaus.plexus.compiler.javac;
+package net.rkunze.maven.compiler.jsr308javac;
 
 /**
  * The MIT License
@@ -24,6 +24,7 @@ package org.codehaus.plexus.compiler.javac;
  * SOFTWARE.
  */
 
+import net.rkunze.maven.compiler.jsr308javac.JavacCompiler;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;

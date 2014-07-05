@@ -1,4 +1,4 @@
-package org.codehaus.plexus.compiler.javac;
+package net.rkunze.maven.compiler.jsr308javac;
 
 /**
  * The MIT License
@@ -81,7 +81,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author <a href="mailto:joerg.wassmer@web.de">J&ouml;rg Wa&szlig;mer</a>
  * @author Others
  * @plexus.component role="org.codehaus.plexus.compiler.Compiler"
- * role-hint="javac"
+ * role-hint="javac+jsr308"
  */
 public class JavacCompiler
     extends AbstractCompiler
@@ -167,7 +167,7 @@ public class JavacCompiler
             {
                 // use fqcn to prevent loading of the class on 1.5 environment !
                 result =
-                    org.codehaus.plexus.compiler.javac.JavaxToolsCompiler.compileInProcess( args, config, sourceFiles );
+                    net.rkunze.maven.compiler.jsr308javac.JavaxToolsCompiler.compileInProcess( args, config, sourceFiles );
             }
             else
             {
