@@ -24,7 +24,6 @@ package net.rkunze.maven.compiler.jsr308javac;
  * SOFTWARE.
  */
 
-import net.rkunze.maven.compiler.jsr308javac.JavacCompiler;
 import org.codehaus.plexus.compiler.AbstractCompilerTest;
 import org.codehaus.plexus.compiler.CompilerConfiguration;
 import org.codehaus.plexus.util.StringUtils;

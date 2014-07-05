@@ -163,16 +163,7 @@ public class JavacCompiler
         }
         else
         {
-            if ( isJava16() && !config.isForceJavacCompilerUse() )
-            {
-                // use fqcn to prevent loading of the class on 1.5 environment !
-                result =
-                    net.rkunze.maven.compiler.jsr308javac.JavaxToolsCompiler.compileInProcess( args, config, sourceFiles );
-            }
-            else
-            {
-                result = compileInProcess( args, config );
-            }
+            result = compileInProcess( args, config );
         }
 
         return result;

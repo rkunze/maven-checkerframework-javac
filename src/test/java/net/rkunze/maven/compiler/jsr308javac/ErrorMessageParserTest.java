@@ -24,7 +24,6 @@ package net.rkunze.maven.compiler.jsr308javac;
  * SOFTWARE.
  */
 
-import net.rkunze.maven.compiler.jsr308javac.JavacCompiler;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
