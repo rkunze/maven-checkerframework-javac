@@ -74,6 +74,7 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.checkerframework.framework.util.CheckerMain;
 
 /**
  * @author <a href="mailto:trygvis@inamo.no">Trygve Laugst&oslash;l</a>
@@ -83,7 +84,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @plexus.component role="org.codehaus.plexus.compiler.Compiler"
  * role-hint="javac+jsr308"
  */
-public class JavacCompiler
+public class JavacJSR308Compiler
     extends AbstractCompiler
 {
 
@@ -105,7 +106,7 @@ public class JavacCompiler
     //
     // ----------------------------------------------------------------------
 
-    public JavacCompiler()
+    public JavacJSR308Compiler()
     {
         super( CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, ".java", ".class", null );
     }
@@ -827,11 +828,11 @@ public class JavacCompiler
             if ( ( getLogger() != null ) && getLogger().isDebugEnabled() )
             {
                 tempFile =
-                    File.createTempFile( JavacCompiler.class.getName(), "arguments", new File( outputDirectory ) );
+                    File.createTempFile( JavacJSR308Compiler.class.getName(), "arguments", new File( outputDirectory ) );
             }
             else
             {
-                tempFile = File.createTempFile( JavacCompiler.class.getName(), "arguments" );
+                tempFile = File.createTempFile( JavacJSR308Compiler.class.getName(), "arguments" );
                 tempFile.deleteOnExit();
             }
 
@@ -954,16 +955,16 @@ public class JavacCompiler
                 return c;
             case ReuseSame:
             default:
-                c = JavacCompiler.JAVAC_CLASS;
+                c = JavacJSR308Compiler.JAVAC_CLASS;
                 if ( c != null )
                 {
                     return c;
                 }
-                synchronized ( JavacCompiler.LOCK )
+                synchronized ( JavacJSR308Compiler.LOCK )
                 {
                     if ( c == null )
                     {
-                        JavacCompiler.JAVAC_CLASS = c = createJavacClass();
+                        JavacJSR308Compiler.JAVAC_CLASS = c = createJavacClass();
                     }
                     return c;
                 }
@@ -982,8 +983,8 @@ public class JavacCompiler
         try
         {
             // look whether JavaC is on Maven's classpath
-            //return Class.forName( JavacCompiler.JAVAC_CLASSNAME, true, JavacCompiler.class.getClassLoader() );
-            return JavacCompiler.class.getClassLoader().loadClass( JavacCompiler.JAVAC_CLASSNAME );
+            //return Class.forName( JavacJSR308Compiler.JAVAC_CLASSNAME, true, JavacJSR308Compiler.class.getClassLoader() );
+            return JavacJSR308Compiler.class.getClassLoader().loadClass( JavacJSR308Compiler.JAVAC_CLASSNAME );
         }
         catch ( ClassNotFoundException ex )
         {
@@ -994,13 +995,13 @@ public class JavacCompiler
         if ( !toolsJar.exists() )
         {
             throw new CompilerException( "tools.jar not found: " + toolsJar );
-        }
+}
 
         try
         {
             // Combined classloader with no parent/child relationship, so classes in our classloader
             // can reference classes in tools.jar
-            URL[] originalUrls = ((URLClassLoader) JavacCompiler.class.getClassLoader()).getURLs();
+            URL[] originalUrls = ((URLClassLoader) JavacJSR308Compiler.class.getClassLoader()).getURLs();
             URL[] urls = new URL[originalUrls.length + 1];
             urls[0] = toolsJar.toURI().toURL();
             System.arraycopy(originalUrls, 0, urls, 1, originalUrls.length);
@@ -1011,8 +1012,8 @@ public class JavacCompiler
             thread.setContextClassLoader( javacClassLoader );
             try
             {
-                //return Class.forName( JavacCompiler.JAVAC_CLASSNAME, true, javacClassLoader );
-                return javacClassLoader.loadClass( JavacCompiler.JAVAC_CLASSNAME );
+                //return Class.forName( JavacJSR308Compiler.JAVAC_CLASSNAME, true, javacClassLoader );
+                return javacClassLoader.loadClass( JavacJSR308Compiler.JAVAC_CLASSNAME );
             }
             finally
             {

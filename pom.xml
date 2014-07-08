@@ -7,7 +7,9 @@
 
     <name>Javac with JSR-308 Maven Support</name>
     <description>JSR-308 enabled Javac Compiler support for Maven compiler plugin.</description>
-
+    <properties>
+        <checker-framework.version>1.8.3</checker-framework.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
@@ -29,6 +31,31 @@
             <artifactId>plexus-compiler-test</artifactId>
             <version>2.3</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker-qual</artifactId>
+            <version>${checker-framework.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>compiler</artifactId>
+            <version>${checker-framework.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker</artifactId>
+            <version>${checker-framework.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>jdk7</artifactId>
+            <version>${checker-framework.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>jdk8</artifactId>
+            <version>1.8.3</version>
         </dependency>
     </dependencies>
     <build>

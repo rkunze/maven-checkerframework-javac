@@ -85,7 +85,7 @@ public abstract class AbstractJavacCompilerTest
 
     public void internalTest( CompilerConfiguration compilerConfiguration, List<String> expectedArguments )
     {
-        String[] actualArguments = JavacCompiler.buildCompilerArguments( compilerConfiguration, new String[0] );
+        String[] actualArguments = JavacJSR308Compiler.buildCompilerArguments( compilerConfiguration, new String[0] );
 
         assertEquals( "The expected and actual argument list sizes differ.", expectedArguments.size(),
                       actualArguments.length );
@@ -198,7 +198,7 @@ public abstract class AbstractJavacCompilerTest
     public void testCommandLineTooLongWhenForking()
         throws Exception
     {
-        JavacCompiler compiler = (JavacCompiler) lookup( org.codehaus.plexus.compiler.Compiler.ROLE, getRoleHint() );
+        JavacJSR308Compiler compiler = (JavacJSR308Compiler) lookup( org.codehaus.plexus.compiler.Compiler.ROLE, getRoleHint() );
 
         File destDir = new File( "target/test-classes-cmd" );
         destDir.mkdirs();

@@ -51,7 +51,7 @@ public class ErrorMessageParserTest
                 "import java.util.Date;public class Foo{    private Date date = new Date( \"foo\");}" + EOL +
                 "                                                               ^" + EOL;
 
-        CompilerMessage compilerError = JavacCompiler.parseModernError( 0, error );
+        CompilerMessage compilerError = JavacJSR308Compiler.parseModernError( 0, error );
 
         assertNotNull( compilerError );
 
@@ -75,7 +75,7 @@ public class ErrorMessageParserTest
                 "        finally { return; }" + EOL +
                 "                          ^" + EOL;
 
-        CompilerMessage compilerError = JavacCompiler.parseModernError( 0, error );
+        CompilerMessage compilerError = JavacJSR308Compiler.parseModernError( 0, error );
 
         assertNotNull( compilerError );
 
@@ -98,7 +98,7 @@ public class ErrorMessageParserTest
             "         i;" + EOL +
             "         ^" + EOL;
 
-        CompilerMessage compilerError = JavacCompiler.parseModernError( 1, error );
+        CompilerMessage compilerError = JavacJSR308Compiler.parseModernError( 1, error );
 
         assertNotNull( compilerError );
 
@@ -123,7 +123,7 @@ public class ErrorMessageParserTest
             "        foo();" + EOL +
             "        ^" + EOL;
 
-        CompilerMessage compilerError = JavacCompiler.parseModernError( 1, error );
+        CompilerMessage compilerError = JavacJSR308Compiler.parseModernError( 1, error );
 
         assertNotNull( compilerError );
 
@@ -156,7 +156,7 @@ public class ErrorMessageParserTest
             "2 errors" + EOL;
 
         List<CompilerMessage> messages =
-            JavacCompiler.parseModernStream( 1, new BufferedReader( new StringReader( errors ) ) );
+            JavacJSR308Compiler.parseModernStream( 1, new BufferedReader( new StringReader( errors ) ) );
 
         assertEquals( 2, messages.size() );
     }
@@ -175,7 +175,7 @@ public class ErrorMessageParserTest
             "2 errors" + EOL;
 
         List<CompilerMessage> messages =
-            JavacCompiler.parseModernStream( 1, new BufferedReader( new StringReader( errors ) ) );
+            JavacJSR308Compiler.parseModernStream( 1, new BufferedReader( new StringReader( errors ) ) );
 
         assertEquals( 2, messages.size() );
     }
@@ -192,7 +192,7 @@ public class ErrorMessageParserTest
                 "1 error" + EOL;
 
         List<CompilerMessage> messages =
-            JavacCompiler.parseModernStream( 1, new BufferedReader( new StringReader( errors ) ) );
+            JavacJSR308Compiler.parseModernStream( 1, new BufferedReader( new StringReader( errors ) ) );
 
         assertEquals( 1, messages.size() );
     }
@@ -208,7 +208,7 @@ public class ErrorMessageParserTest
                 "\u8b66\u544a 1 \u500b" + EOL;
 
         List<CompilerMessage> messages =
-            JavacCompiler.parseModernStream( 0, new BufferedReader( new StringReader( errors ) ) );
+            JavacJSR308Compiler.parseModernStream( 0, new BufferedReader( new StringReader( errors ) ) );
 
         assertEquals( 1, messages.size() );
         assertFalse( ( (CompilerMessage) messages.get( 0 ) ).isError() );
@@ -220,7 +220,7 @@ public class ErrorMessageParserTest
             "        System.out.println( \"Hello World!\" );x" + EOL +
             "                                             ^" + EOL;
 
-        CompilerMessage compilerError = JavacCompiler.parseModernError( 1, error );
+        CompilerMessage compilerError = JavacJSR308Compiler.parseModernError( 1, error );
 
         assertEquals( "/my/prj/src/main/java/test/prj/App.java:[11,45] not a statement",
                       String.valueOf( compilerError ) );
@@ -234,7 +234,7 @@ public class ErrorMessageParserTest
                 "        System.out.println( \"Hello World!\" );x" + EOL +
                 "                                             ^" + EOL;
 
-        CompilerMessage compilerError = JavacCompiler.parseModernError( 1, error );
+        CompilerMessage compilerError = JavacJSR308Compiler.parseModernError( 1, error );
 
         assertEquals(
             "c:\\Documents and Settings\\My Self\\Documents\\prj\\src\\main\\java\\test\\prj\\App.java:[11,45] not a statement",
@@ -621,7 +621,7 @@ public class ErrorMessageParserTest
             "[total 654ms]" + CRLF +
             "4 warnings" + CRLF;
         List<CompilerMessage> compilerErrors =
-            JavacCompiler.parseModernStream( 0, new BufferedReader( new StringReader( errors ) ) );
+            JavacJSR308Compiler.parseModernStream( 0, new BufferedReader( new StringReader( errors ) ) );
         assertEquals( "count", 3, compilerErrors.size() );
         CompilerMessage error1 = compilerErrors.get( 0 );
         assertEquals( "file",
