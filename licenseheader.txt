@@ -1,0 +1,46 @@
+<#if licenseFirst??>
+${licenseFirst}
+</#if>
+${licensePrefix}The MIT License
+${licensePrefix}
+${licensePrefix}Copyright (c) ${year}, Richard Kunze
+${licensePrefix}
+${licensePrefix}Permission is hereby granted, free of charge, to any person obtaining a copy of
+${licensePrefix}this software and associated documentation files (the "Software"), to deal in
+${licensePrefix}the Software without restriction, including without limitation the rights to
+${licensePrefix}use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+${licensePrefix}of the Software, and to permit persons to whom the Software is furnished to do
+${licensePrefix}so, subject to the following conditions:
+${licensePrefix}
+${licensePrefix}The above copyright notice and this permission notice shall be included in all
+${licensePrefix}copies or substantial portions of the Software.
+${licensePrefix}
+${licensePrefix}THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+${licensePrefix}IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+${licensePrefix}FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+${licensePrefix}AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+${licensePrefix}LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+${licensePrefix}OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+${licensePrefix}SOFTWARE.
+<#if licenseLast??>
+${licenseLast}
+</#if>
+
+<#if licenseFirst??>
+${licenseFirst}
+</#if>
+${licensePrefix} Licensed under the Apache License, Version 2.0 (the "License");
+${licensePrefix} you may not use this file except in compliance with the License.
+${licensePrefix} You may obtain a copy of the License at
+${licensePrefix}
+${licensePrefix}    http://www.apache.org/licenses/LICENSE-2.0
+${licensePrefix}
+${licensePrefix} Unless required by applicable law or agreed to in writing, software
+${licensePrefix} distributed under the License is distributed on an "AS IS" BASIS,
+${licensePrefix} WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+${licensePrefix} See the License for the specific language governing permissions and
+${licensePrefix} limitations under the License.
+${licensePrefix}
+<#if licenseLast??>
+${licenseLast}
+</#if>

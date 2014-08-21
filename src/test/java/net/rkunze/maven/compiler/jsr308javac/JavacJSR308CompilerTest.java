@@ -32,14 +32,23 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
+import static junit.framework.Assert.assertEquals;
+import static org.codehaus.plexus.PlexusTestCase.getBasedir;
+import static org.codehaus.plexus.compiler.AbstractCompiler.getPathString;
+import org.codehaus.plexus.compiler.CompilerException;
+import org.codehaus.plexus.compiler.CompilerMessage;
+import org.codehaus.plexus.util.FileUtils;
 
 /**
  * @author <a href="mailto:jason@plexus.org">Jason van Zyl</a>
  */
-public abstract class AbstractJavacCompilerTest
+public class JavacJSR308CompilerTest
     extends AbstractCompilerTest
 {
     private static final String PS = File.pathSeparator;
@@ -80,10 +89,16 @@ public abstract class AbstractJavacCompilerTest
     protected Collection<String> expectedOutputFiles()
     {
         return Arrays.asList( new String[]{ "org/codehaus/foo/Deprecation.class", "org/codehaus/foo/ExternalDeps.class",
-            "org/codehaus/foo/Person.class", "org/codehaus/foo/ReservedWord.class" } );
+            "org/codehaus/foo/JSR308Nullness.class", "org/codehaus/foo/Person.class", "org/codehaus/foo/ReservedWord.class" } );
     }
 
-    public void internalTest( CompilerConfiguration compilerConfiguration, List<String> expectedArguments )
+    protected Collection<String> expectedOutputFilesNullnessChecker()
+    {
+        return Arrays.asList( new String[]{ "org/codehaus/foo/Deprecation.class", "org/codehaus/foo/ExternalDeps.class",
+            "org/codehaus/foo/Person.class" } );
+    }
+
+    public void internalTest( CompilerConfiguration compilerConfiguration, List<String> expectedArguments ) throws CompilerException
     {
         String[] actualArguments = JavacJSR308Compiler.buildCompilerArguments( compilerConfiguration, new String[0] );
 
@@ -96,7 +111,7 @@ public abstract class AbstractJavacCompilerTest
         }
     }
 
-    public void testBuildCompilerArgs13()
+    public void testBuildCompilerArgs13() throws CompilerException
     {
         List<String> expectedArguments = new ArrayList<String>();
 
@@ -109,7 +124,7 @@ public abstract class AbstractJavacCompilerTest
         internalTest( compilerConfiguration, expectedArguments );
     }
 
-    public void testBuildCompilerArgs14()
+    public void testBuildCompilerArgs14() throws CompilerException
     {
         List<String> expectedArguments = new ArrayList<String>();
 
@@ -122,7 +137,7 @@ public abstract class AbstractJavacCompilerTest
         internalTest( compilerConfiguration, expectedArguments );
     }
 
-    public void testBuildCompilerArgs15()
+    public void testBuildCompilerArgs15() throws CompilerException
     {
         List<String> expectedArguments = new ArrayList<String>();
 
@@ -135,7 +150,7 @@ public abstract class AbstractJavacCompilerTest
         internalTest( compilerConfiguration, expectedArguments );
     }
 
-    public void testBuildCompilerArgsUnspecifiedVersion()
+    public void testBuildCompilerArgsUnspecifiedVersion() throws CompilerException
     {
         List<String> expectedArguments = new ArrayList<String>();
 
@@ -146,7 +161,7 @@ public abstract class AbstractJavacCompilerTest
         internalTest( compilerConfiguration, expectedArguments );
     }
 
-    public void testBuildCompilerDebugLevel()
+    public void testBuildCompilerDebugLevel() throws CompilerException
     {
         List<String> expectedArguments = new ArrayList<String>();
 
@@ -162,7 +177,7 @@ public abstract class AbstractJavacCompilerTest
     }
 
     // PLXCOMP-190
-    public void testJRuntimeArguments()
+    public void testJRuntimeArguments() throws CompilerException
     {
         List<String> expectedArguments = new ArrayList<String>();
 
@@ -173,15 +188,22 @@ public abstract class AbstractJavacCompilerTest
         expectedArguments.add( "-d" );
         expectedArguments.add( new File( "/output" ).getAbsolutePath() );
 
+        // classpath (automatically added by JavacJSR308Compiler)
+        expectedArguments.add("-Xbootclasspath/p:" 
+                + ClasspathConfig.getAnnotatedJDK(System.getProperty("java.version")).getAbsolutePath()
+                + PS + ClasspathConfig.COMPILER_JAR.getAbsolutePath() + PS );
+        expectedArguments.add( "-classpath" );
+        expectedArguments.add( ClasspathConfig.CHECKER_JAR.getAbsolutePath() + PS );
+        
         // targetVersion
-        compilerConfiguration.setTargetVersion( "1.3" );
+        compilerConfiguration.setTargetVersion( "1.7" );
         expectedArguments.add( "-target" );
-        expectedArguments.add( "1.3" );
+        expectedArguments.add( "1.7" );
 
         // sourceVersion
-        compilerConfiguration.setSourceVersion( "1.3" );
+        compilerConfiguration.setSourceVersion( "1.7" );
         expectedArguments.add( "-source" );
-        expectedArguments.add( "1.3" );
+        expectedArguments.add( "1.7" );
 
         // customCompilerArguments
         Map<String, String> customCompilerArguments = new LinkedHashMap<String, String>();
@@ -223,7 +245,7 @@ public abstract class AbstractJavacCompilerTest
     */
 
     private void populateArguments( CompilerConfiguration compilerConfiguration, List<String> expectedArguments,
-                                    boolean suppressSourceVersion, boolean suppressEncoding )
+                                    boolean suppressSourceVersion, boolean suppressEncoding ) throws CompilerException
     {
         // outputLocation
 
@@ -233,6 +255,11 @@ public abstract class AbstractJavacCompilerTest
 
         expectedArguments.add( new File( "/output" ).getAbsolutePath() );
 
+        // Bootstrap classpath for the annotated JDK and the JSR308 javac
+        expectedArguments.add("-Xbootclasspath/p:" 
+                + ClasspathConfig.getAnnotatedJDK(System.getProperty("java.version")).getAbsolutePath()
+                + PS + ClasspathConfig.COMPILER_JAR.getAbsolutePath() + PS);
+        
         // classpathEntires
 
         List<String> classpathEntries = new ArrayList<String>();
@@ -245,7 +272,7 @@ public abstract class AbstractJavacCompilerTest
 
         expectedArguments.add( "-classpath" );
 
-        expectedArguments.add( "/myjar1.jar" + PS + "/myjar2.jar" + PS );
+        expectedArguments.add( ClasspathConfig.CHECKER_JAR.getAbsolutePath() + PS + "/myjar1.jar" + PS + "/myjar2.jar" + PS );
 
         // sourceRoots
 
@@ -282,21 +309,21 @@ public abstract class AbstractJavacCompilerTest
 
         // targetVersion
 
-        compilerConfiguration.setTargetVersion( "1.3" );
+        compilerConfiguration.setTargetVersion( "1.7" );
 
         expectedArguments.add( "-target" );
 
-        expectedArguments.add( "1.3" );
+        expectedArguments.add( "1.7" );
 
         // sourceVersion
 
-        compilerConfiguration.setSourceVersion( "1.3" );
+        compilerConfiguration.setSourceVersion( "1.7" );
 
         if ( !suppressSourceVersion )
         {
             expectedArguments.add( "-source" );
 
-            expectedArguments.add( "1.3" );
+            expectedArguments.add( "1.7" );
         }
 
         // sourceEncoding
@@ -325,5 +352,150 @@ public abstract class AbstractJavacCompilerTest
         expectedArguments.add( "foo" );
 
         expectedArguments.add( "bar" );
+        
+    }
+    
+    @SuppressWarnings( "unchecked" )
+    public void testCompilingSourcesWithNullnessChecker() throws Exception
+    {
+        List<CompilerMessage> messages = new ArrayList<CompilerMessage>();
+        Collection<String> files = new TreeSet<String>();
+
+        for ( CompilerConfiguration compilerConfig : getJsr308CompilerConfigurations() )
+        {
+            File outputDir = new File( compilerConfig.getOutputLocation() );
+
+            org.codehaus.plexus.compiler.Compiler compiler = (org.codehaus.plexus.compiler.Compiler) lookup( org.codehaus.plexus.compiler.Compiler.ROLE, getRoleHint() );
+
+            messages.addAll( compiler.performCompile( compilerConfig ).getCompilerMessages() );
+
+            if ( outputDir.isDirectory() )
+            {
+                files.addAll( normalizePaths( FileUtils.getFileNames( outputDir, null, null, false ) ) );
+            }
+        }
+
+        final int expectedCompilerErrors = 6;
+        final int expectedCompilerWarnings = 1;
+        
+        int numCompilerErrors = compilerErrorCount( messages );
+
+        int numCompilerWarnings = messages.size() - numCompilerErrors;
+
+        if ( expectedCompilerErrors != numCompilerErrors )
+        {
+            System.out.println( numCompilerErrors + " error(s) found:" );
+            for ( CompilerMessage error : messages )
+            {
+                if ( !error.isError() )
+                {
+                    continue;
+                }
+
+                System.out.println( "----" );
+                System.out.println( error.getFile() );
+                System.out.println( error.getMessage() );
+                System.out.println( "----" );
+            }
+
+            assertEquals( "Wrong number of compilation errors.", expectedCompilerErrors, numCompilerErrors );
+        }
+
+        if ( expectedCompilerWarnings != numCompilerWarnings )
+        {
+            System.out.println( numCompilerWarnings + " warning(s) found:" );
+            for ( CompilerMessage error : messages )
+            {
+                if ( error.isError() )
+                {
+                    continue;
+                }
+
+                System.out.println( "----" );
+                System.out.println( error.getFile() );
+                System.out.println( error.getMessage() );
+                System.out.println( "----" );
+            }
+
+            assertEquals( "Wrong number of compilation warnings.", expectedCompilerWarnings, numCompilerWarnings );
+        }
+
+        assertEquals( new TreeSet<String>( normalizePaths( expectedOutputFilesNullnessChecker() ) ), files );
+    }
+   
+
+    private List<CompilerConfiguration> getJsr308CompilerConfigurations()
+        throws Exception
+    {
+        String sourceDir = getBasedir() + "/src/test-input/src/main";
+
+        @SuppressWarnings( "unchecked" ) List<String> filenames =
+            FileUtils.getFileNames( new File( sourceDir ), "**/*.java", null, false, true );
+        Collections.sort( filenames );
+
+        List<CompilerConfiguration> compilerConfigurations = new ArrayList<CompilerConfiguration>();
+
+        int index = 0;
+        for ( Iterator<String> it = filenames.iterator(); it.hasNext(); index++ )
+        {
+            String filename = it.next();
+
+            CompilerConfiguration compilerConfig = new CompilerConfiguration();
+
+            compilerConfig.setDebug( true );
+
+            compilerConfig.setShowDeprecation( true );
+
+            compilerConfig.setClasspathEntries( getJsr308Classpath() );
+
+            compilerConfig.addSourceLocation( sourceDir );
+
+            compilerConfig.setOutputLocation( getBasedir() + "/target/" + getRoleHint() + "/classes-jsr308-" + index );
+
+            FileUtils.deleteDirectory( compilerConfig.getOutputLocation() );
+
+            compilerConfig.addInclude( filename );
+
+            compilerConfig.setAnnotationProcessors(new String[] {
+                "org.checkerframework.checker.nullness.NullnessChecker"
+            });
+            
+            compilerConfig.setTargetVersion( "1.8" );
+
+            compilerConfig.setSourceVersion( "1.8" );
+            
+            compilerConfig.setVerbose(true);
+            
+            compilerConfigurations.add( compilerConfig );
+
+        }
+
+        return compilerConfigurations;
+    }
+    
+    protected List<String> getJsr308Classpath()
+        throws Exception
+    {
+        List<String> cp = getClasspath();
+
+        File file = getLocalArtifactPath( "org.checkerframework", "checker-qual", "1.8.3", "jar" );
+
+        assertTrue( "test prerequisite: checker-qual library must be available in local repository, expected "
+                        + file.getAbsolutePath(), file.canRead() );
+
+        cp.add( file.getAbsolutePath() );
+
+        return cp;
+    }
+    
+    
+    private List<String> normalizePaths( Collection<String> relativePaths )
+    {
+        List<String> normalizedPaths = new ArrayList<String>();
+        for ( String relativePath : relativePaths )
+        {
+            normalizedPaths.add( relativePath.replace( File.separatorChar, '/' ) );
+        }
+        return normalizedPaths;
     }
 }

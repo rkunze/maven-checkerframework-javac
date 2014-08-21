@@ -4,7 +4,8 @@ package net.rkunze.maven.compiler.jsr308javac;
  * The MIT License
  *
  * Copyright (c) 2005, The Codehaus
- *
+ * Copyright (c) 2014, Richard Kunze
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -41,19 +42,6 @@ package net.rkunze.maven.compiler.jsr308javac;
  *  limitations under the License.
  */
 
-import org.codehaus.plexus.compiler.AbstractCompiler;
-import org.codehaus.plexus.compiler.CompilerConfiguration;
-import org.codehaus.plexus.compiler.CompilerException;
-import org.codehaus.plexus.compiler.CompilerMessage;
-import org.codehaus.plexus.compiler.CompilerOutputStyle;
-import org.codehaus.plexus.compiler.CompilerResult;
-import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.Os;
-import org.codehaus.plexus.util.StringUtils;
-import org.codehaus.plexus.util.cli.CommandLineException;
-import org.codehaus.plexus.util.cli.CommandLineUtils;
-import org.codehaus.plexus.util.cli.Commandline;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -74,7 +62,18 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.checkerframework.framework.util.CheckerMain;
+import org.codehaus.plexus.compiler.AbstractCompiler;
+import org.codehaus.plexus.compiler.CompilerConfiguration;
+import org.codehaus.plexus.compiler.CompilerException;
+import org.codehaus.plexus.compiler.CompilerMessage;
+import org.codehaus.plexus.compiler.CompilerOutputStyle;
+import org.codehaus.plexus.compiler.CompilerResult;
+import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.Os;
+import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.cli.CommandLineException;
+import org.codehaus.plexus.util.cli.CommandLineUtils;
+import org.codehaus.plexus.util.cli.Commandline;
 
 /**
  * @author <a href="mailto:trygvis@inamo.no">Trygve Laugst&oslash;l</a>
@@ -97,7 +96,6 @@ public class JavacJSR308Compiler
     private static final Object LOCK = new Object();
 
     private static final String JAVAC_CLASSNAME = "com.sun.tools.javac.Main";
-
     private static volatile Class<?> JAVAC_CLASS;
 
     private List<Class<?>> javaccClasses = new CopyOnWriteArrayList<Class<?>>();
@@ -110,7 +108,7 @@ public class JavacJSR308Compiler
     {
         super( CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, ".java", ".class", null );
     }
-
+    
     // ----------------------------------------------------------------------
     // Compiler Implementation
     // ----------------------------------------------------------------------
@@ -118,6 +116,11 @@ public class JavacJSR308Compiler
     public CompilerResult performCompile( CompilerConfiguration config )
         throws CompilerException
     {
+        if ( config.isFork() )
+        {
+            throw new CompilerException("'fork' not supported.");
+        }
+        
         File destinationDir = new File( config.getOutputLocation() );
 
         if ( !destinationDir.exists() )
@@ -143,44 +146,9 @@ public class JavacJSR308Compiler
 
         CompilerResult result;
 
-        if ( config.isFork() )
-        {
-            String executable = config.getExecutable();
-
-            if ( StringUtils.isEmpty( executable ) )
-            {
-                try
-                {
-                    executable = getJavacExecutable();
-                }
-                catch ( IOException e )
-                {
-                    getLogger().warn( "Unable to autodetect 'javac' path, using 'javac' from the environment." );
-                    executable = "javac";
-                }
-            }
-
-            result = compileOutOfProcess( config, executable, args );
-        }
-        else
-        {
-            result = compileInProcess( args, config );
-        }
+        result = compileInProcess( args, config );
 
         return result;
-    }
-
-    protected static boolean isJava16()
-    {
-        try
-        {
-            Thread.currentThread().getContextClassLoader().loadClass( "javax.tools.ToolProvider" );
-            return true;
-        }
-        catch ( Exception e )
-        {
-            return false;
-        }
     }
 
     public String[] createCommandLine( CompilerConfiguration config )
@@ -189,7 +157,7 @@ public class JavacJSR308Compiler
         return buildCompilerArguments( config, getSourceFiles( config ) );
     }
 
-    public static String[] buildCompilerArguments( CompilerConfiguration config, String[] sourceFiles )
+    public static String[] buildCompilerArguments( CompilerConfiguration config, String[] sourceFiles ) throws CompilerException
     {
         List<String> args = new ArrayList<String>();
 
@@ -206,14 +174,25 @@ public class JavacJSR308Compiler
         // ----------------------------------------------------------------------
         // Set the class and source paths
         // ----------------------------------------------------------------------
+        
+        // FIXME: Handle "bootclasspath" argument
+        args.add( "-Xbootclasspath/p:" + getPathString(Arrays.asList(
+                    ClasspathConfig.getAnnotatedJDK(System.getProperty("java.version")).getAbsolutePath(),
+                    ClasspathConfig.COMPILER_JAR.getAbsolutePath()
+                )));
 
-        List<String> classpathEntries = config.getClasspathEntries();
-        if ( classpathEntries != null && !classpathEntries.isEmpty() )
-        {
-            args.add( "-classpath" );
-
-            args.add( getPathString( classpathEntries ) );
+        if (!ClasspathConfig.CHECKER_JAR.exists()) {
+            throw new CompilerException("Type checker jar not found: " + ClasspathConfig.CHECKER_JAR.getAbsolutePath());
         }
+        args.add( "-classpath" );
+        List<String> originalClasspath = config.getClasspathEntries();
+        List<String> classpathEntries = new ArrayList<>(originalClasspath==null ? 1 : originalClasspath.size() + 1);
+        classpathEntries.add(ClasspathConfig.CHECKER_JAR.getAbsolutePath());
+        if ( originalClasspath != null && !originalClasspath.isEmpty() )
+        {
+            classpathEntries.addAll(originalClasspath);
+        }
+        args.add( getPathString( classpathEntries ) );
 
         List<String> sourceLocations = config.getSourceLocations();
         if ( sourceLocations != null && !sourceLocations.isEmpty() )
@@ -224,10 +203,7 @@ public class JavacJSR308Compiler
 
             args.add( getPathString( sourceLocations ) );
         }
-        if ( !isJava16() || config.isForceJavacCompilerUse() || config.isFork() )
-        {
-            args.addAll( Arrays.asList( sourceFiles ) );
-        }
+        args.addAll( Arrays.asList( sourceFiles ) );
 
         if ( !isPreJava16( config ) )
         {
@@ -409,103 +385,6 @@ public class JavacJSR308Compiler
     private static boolean suppressEncoding( CompilerConfiguration config )
     {
         return isPreJava14( config );
-    }
-
-    /**
-     * Compile the java sources in a external process, calling an external executable,
-     * like javac.
-     *
-     * @param config     compiler configuration
-     * @param executable name of the executable to launch
-     * @param args       arguments for the executable launched
-     * @return a CompilerResult object encapsulating the result of the compilation and any compiler messages
-     * @throws CompilerException
-     */
-    protected CompilerResult compileOutOfProcess( CompilerConfiguration config, String executable, String[] args )
-        throws CompilerException
-    {
-        Commandline cli = new Commandline();
-
-        cli.setWorkingDirectory( config.getWorkingDirectory().getAbsolutePath() );
-
-        cli.setExecutable( executable );
-
-        try
-        {
-            File argumentsFile = createFileWithArguments( args, config.getOutputLocation() );
-            cli.addArguments(
-                new String[]{ "@" + argumentsFile.getCanonicalPath().replace( File.separatorChar, '/' ) } );
-
-            if ( !StringUtils.isEmpty( config.getMaxmem() ) )
-            {
-                cli.addArguments( new String[]{ "-J-Xmx" + config.getMaxmem() } );
-            }
-
-            if ( !StringUtils.isEmpty( config.getMeminitial() ) )
-            {
-                cli.addArguments( new String[]{ "-J-Xms" + config.getMeminitial() } );
-            }
-
-            for ( String key : config.getCustomCompilerArgumentsAsMap().keySet() )
-            {
-                if ( StringUtils.isNotEmpty( key ) && key.startsWith( "-J" ) )
-                {
-                    cli.addArguments( new String[]{ key } );
-                }
-            }
-        }
-        catch ( IOException e )
-        {
-            throw new CompilerException( "Error creating file with javac arguments", e );
-        }
-
-        CommandLineUtils.StringStreamConsumer out = new CommandLineUtils.StringStreamConsumer();
-
-        CommandLineUtils.StringStreamConsumer err = new CommandLineUtils.StringStreamConsumer();
-
-        int returnCode;
-
-        List<CompilerMessage> messages;
-
-        if ( ( getLogger() != null ) && getLogger().isDebugEnabled() )
-        {
-            File commandLineFile =
-                new File( config.getOutputLocation(), "javac." + ( Os.isFamily( Os.FAMILY_WINDOWS ) ? "bat" : "sh" ) );
-            try
-            {
-                FileUtils.fileWrite( commandLineFile.getAbsolutePath(), cli.toString().replaceAll( "'", "" ) );
-
-                if ( !Os.isFamily( Os.FAMILY_WINDOWS ) )
-                {
-                    Runtime.getRuntime().exec( new String[]{ "chmod", "a+x", commandLineFile.getAbsolutePath() } );
-                }
-            }
-            catch ( IOException e )
-            {
-                if ( ( getLogger() != null ) && getLogger().isWarnEnabled() )
-                {
-                    getLogger().warn( "Unable to write '" + commandLineFile.getName() + "' debug script file", e );
-                }
-            }
-        }
-
-        try
-        {
-            returnCode = CommandLineUtils.executeCommandLine( cli, out, err );
-
-            messages = parseModernStream( returnCode, new BufferedReader( new StringReader( err.getOutput() ) ) );
-        }
-        catch ( CommandLineException e )
-        {
-            throw new CompilerException( "Error while executing the external compiler.", e );
-        }
-        catch ( IOException e )
-        {
-            throw new CompilerException( "Error while executing the external compiler.", e );
-        }
-
-        boolean success = returnCode == 0;
-        return new CompilerResult( success, messages );
     }
 
     /**
@@ -982,30 +861,15 @@ public class JavacJSR308Compiler
     {
         try
         {
-            // look whether JavaC is on Maven's classpath
-            //return Class.forName( JavacJSR308Compiler.JAVAC_CLASSNAME, true, JavacJSR308Compiler.class.getClassLoader() );
-            return JavacJSR308Compiler.class.getClassLoader().loadClass( JavacJSR308Compiler.JAVAC_CLASSNAME );
-        }
-        catch ( ClassNotFoundException ex )
-        {
-            // ok
-        }
-
-        final File toolsJar = new File( System.getProperty( "java.home" ), "../lib/tools.jar" );
-        if ( !toolsJar.exists() )
-        {
-            throw new CompilerException( "tools.jar not found: " + toolsJar );
-}
-
-        try
-        {
-            // Combined classloader with no parent/child relationship, so classes in our classloader
-            // can reference classes in tools.jar
-            URL[] originalUrls = ((URLClassLoader) JavacJSR308Compiler.class.getClassLoader()).getURLs();
-            URL[] urls = new URL[originalUrls.length + 1];
-            urls[0] = toolsJar.toURI().toURL();
-            System.arraycopy(originalUrls, 0, urls, 1, originalUrls.length);
-            ClassLoader javacClassLoader = new URLClassLoader(urls);
+            if (!ClasspathConfig.COMPILER_JAR.exists()) {
+                throw new CompilerException("Javac jar file not found: " + ClasspathConfig.COMPILER_JAR.getAbsolutePath());
+            }
+            /*
+            ClassLoader javacClassLoader = new DelegateLastClassLoader(
+                    new URL[] { ClasspathConfig.COMPILER_JAR.toURI().toURL() });
+            */
+            ClassLoader javacClassLoader = new DelegateLastClassLoader(
+                    ((URLClassLoader)getClass().getClassLoader()).getURLs() );
 
             final Thread thread = Thread.currentThread();
             final ClassLoader contextClassLoader = thread.getContextClassLoader();
@@ -1020,19 +884,18 @@ public class JavacJSR308Compiler
                 thread.setContextClassLoader( contextClassLoader );
             }
         }
+        /*
         catch ( MalformedURLException ex )
         {
             throw new CompilerException(
                 "Could not convert the file reference to tools.jar to a URL, path to tools.jar: '"
-                    + toolsJar.getAbsolutePath() + "'.", ex );
+                    + ClasspathConfig.COMPILER_JAR.getAbsolutePath() + "'.", ex );
         }
+        */
         catch ( ClassNotFoundException ex )
         {
-            throw new CompilerException( "Unable to locate the Javac Compiler in:" + EOL + "  " + toolsJar + EOL
-                                             + "Please ensure you are using JDK 1.4 or above and" + EOL
-                                             + "not a JRE (the com.sun.tools.javac.Main class is required)." + EOL
-                                             + "In most cases you can change the location of your Java" + EOL
-                                             + "installation by setting the JAVA_HOME environment variable.", ex );
+            throw new CompilerException( "Unable to locate the javac compiler in " 
+                    + ClasspathConfig.COMPILER_JAR.getAbsolutePath(), ex );
         }
     }
 
