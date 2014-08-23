@@ -42,21 +42,22 @@ import java.io.File;
 import org.codehaus.plexus.compiler.CompilerException;
 
 public class ClasspathConfig {
-    private static final String PREFIX = System.getProperty("localRepository");
-    static final File COMPILER_JAR = repositoryPath("${org.checkerframework:compiler:jar.relative.repository}");
-    static final File CHECKER_JAR  = repositoryPath("${org.checkerframework:checker:jar.relative.repository}");
-    static final File ANNOTATED_JDK_1_7_JAR  = repositoryPath("${org.checkerframework:jdk7:jar.relative.repository}");
-    static final File ANNOTATED_JDK_1_8_JAR  = repositoryPath("${org.checkerframework:jdk8:jar.relative.repository}");
-    
+
     private static File repositoryPath(String artifact) {
-        return new File(PREFIX + File.separator + artifact.replace("${file.separator}", File.separator));
+        String basedir = System.getProperty("localRepository");
+        if (basedir == null) {
+            basedir = System.getProperty("user.home") + File.separator + ".m2" + File.separator + "repository";
+        }
+        return new File(basedir + File.separator + artifact.replace("${file.separator}", File.separator));
     }
     
+    static File getCompilerJar() { return repositoryPath("${org.checkerframework:compiler:jar.relative.repository}"); }
+    static File getCheckerJar() { return repositoryPath("${org.checkerframework:checker:jar.relative.repository}"); }
     static File getAnnotatedJDK(String jdkVersion) throws CompilerException {
         if (jdkVersion.startsWith("1.7.")) {
-            return ANNOTATED_JDK_1_7_JAR;
+            return repositoryPath("${org.checkerframework:jdk7:jar.relative.repository}");
         } else if (jdkVersion.startsWith("1.8.")) {
-            return ANNOTATED_JDK_1_8_JAR;
+            return repositoryPath("${org.checkerframework:jdk8:jar.relative.repository}");
         } else {
             throw new CompilerException("No annotated JDK jar found for java version " + jdkVersion);
         }

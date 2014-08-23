@@ -44,22 +44,18 @@ package net.rkunze.maven.compiler.jsr308javac;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.codehaus.plexus.compiler.AbstractCompiler;
@@ -68,12 +64,7 @@ import org.codehaus.plexus.compiler.CompilerException;
 import org.codehaus.plexus.compiler.CompilerMessage;
 import org.codehaus.plexus.compiler.CompilerOutputStyle;
 import org.codehaus.plexus.compiler.CompilerResult;
-import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.Os;
 import org.codehaus.plexus.util.StringUtils;
-import org.codehaus.plexus.util.cli.CommandLineException;
-import org.codehaus.plexus.util.cli.CommandLineUtils;
-import org.codehaus.plexus.util.cli.Commandline;
 
 /**
  * @author <a href="mailto:trygvis@inamo.no">Trygve Laugst&oslash;l</a>
@@ -159,6 +150,12 @@ public class JavacJSR308Compiler
 
     public static String[] buildCompilerArguments( CompilerConfiguration config, String[] sourceFiles ) throws CompilerException
     {
+        if (!ClasspathConfig.getCheckerJar().exists()) {
+            throw new CompilerException("Type checker jar not found: " + ClasspathConfig.getCheckerJar().getAbsolutePath());
+        }
+        if (!ClasspathConfig.getAnnotatedJDK(System.getProperty("java.version")).exists()) {
+            throw new CompilerException("Annotaded JDK jar not found: " + ClasspathConfig.getAnnotatedJDK(System.getProperty("java.version")).getAbsolutePath());
+        }
         List<String> args = new ArrayList<String>();
 
         // ----------------------------------------------------------------------
@@ -178,16 +175,13 @@ public class JavacJSR308Compiler
         // FIXME: Handle "bootclasspath" argument
         args.add( "-Xbootclasspath/p:" + getPathString(Arrays.asList(
                     ClasspathConfig.getAnnotatedJDK(System.getProperty("java.version")).getAbsolutePath(),
-                    ClasspathConfig.COMPILER_JAR.getAbsolutePath()
+                    ClasspathConfig.getCompilerJar().getAbsolutePath()
                 )));
 
-        if (!ClasspathConfig.CHECKER_JAR.exists()) {
-            throw new CompilerException("Type checker jar not found: " + ClasspathConfig.CHECKER_JAR.getAbsolutePath());
-        }
         args.add( "-classpath" );
         List<String> originalClasspath = config.getClasspathEntries();
         List<String> classpathEntries = new ArrayList<>(originalClasspath==null ? 1 : originalClasspath.size() + 1);
-        classpathEntries.add(ClasspathConfig.CHECKER_JAR.getAbsolutePath());
+        classpathEntries.add(ClasspathConfig.getCheckerJar().getAbsolutePath());
         if ( originalClasspath != null && !originalClasspath.isEmpty() )
         {
             classpathEntries.addAll(originalClasspath);
@@ -690,112 +684,6 @@ public class JavacJSR308Compiler
         return null;
     }
 
-    /**
-     * put args into a temp file to be referenced using the @ option in javac command line
-     *
-     * @param args
-     * @return the temporary file wth the arguments
-     * @throws IOException
-     */
-    private File createFileWithArguments( String[] args, String outputDirectory )
-        throws IOException
-    {
-        PrintWriter writer = null;
-        try
-        {
-            File tempFile;
-            if ( ( getLogger() != null ) && getLogger().isDebugEnabled() )
-            {
-                tempFile =
-                    File.createTempFile( JavacJSR308Compiler.class.getName(), "arguments", new File( outputDirectory ) );
-            }
-            else
-            {
-                tempFile = File.createTempFile( JavacJSR308Compiler.class.getName(), "arguments" );
-                tempFile.deleteOnExit();
-            }
-
-            writer = new PrintWriter( new FileWriter( tempFile ) );
-
-            for ( int i = 0; i < args.length; i++ )
-            {
-                String argValue = args[i].replace( File.separatorChar, '/' );
-
-                writer.write( "\"" + argValue + "\"" );
-
-                writer.println();
-            }
-
-            writer.flush();
-
-            return tempFile;
-
-        }
-        finally
-        {
-            if ( writer != null )
-            {
-                writer.close();
-            }
-        }
-    }
-
-    /**
-     * Get the path of the javac tool executable: try to find it depending the OS or the <code>java.home</code>
-     * system property or the <code>JAVA_HOME</code> environment variable.
-     *
-     * @return the path of the Javadoc tool
-     * @throws IOException if not found
-     */
-    private static String getJavacExecutable()
-        throws IOException
-    {
-        String javacCommand = "javac" + ( Os.isFamily( Os.FAMILY_WINDOWS ) ? ".exe" : "" );
-
-        String javaHome = System.getProperty( "java.home" );
-        File javacExe;
-        if ( Os.isName( "AIX" ) )
-        {
-            javacExe = new File( javaHome + File.separator + ".." + File.separator + "sh", javacCommand );
-        }
-        else if ( Os.isName( "Mac OS X" ) )
-        {
-            javacExe = new File( javaHome + File.separator + "bin", javacCommand );
-        }
-        else
-        {
-            javacExe = new File( javaHome + File.separator + ".." + File.separator + "bin", javacCommand );
-        }
-
-        // ----------------------------------------------------------------------
-        // Try to find javacExe from JAVA_HOME environment variable
-        // ----------------------------------------------------------------------
-        if ( !javacExe.isFile() )
-        {
-            Properties env = CommandLineUtils.getSystemEnvVars();
-            javaHome = env.getProperty( "JAVA_HOME" );
-            if ( StringUtils.isEmpty( javaHome ) )
-            {
-                throw new IOException( "The environment variable JAVA_HOME is not correctly set." );
-            }
-            if ( !new File( javaHome ).isDirectory() )
-            {
-                throw new IOException(
-                    "The environment variable JAVA_HOME=" + javaHome + " doesn't exist or is not a valid directory." );
-            }
-
-            javacExe = new File( env.getProperty( "JAVA_HOME" ) + File.separator + "bin", javacCommand );
-        }
-
-        if ( !javacExe.isFile() )
-        {
-            throw new IOException( "The javadoc executable '" + javacExe
-                                       + "' doesn't exist or is not a file. Verify the JAVA_HOME environment variable." );
-        }
-
-        return javacExe.getAbsolutePath();
-    }
-
     private void releaseJavaccClass( Class<?> javaccClass, CompilerConfiguration compilerConfiguration )
     {
         if ( compilerConfiguration.getCompilerReuseStrategy()
@@ -861,13 +749,10 @@ public class JavacJSR308Compiler
     {
         try
         {
-            if (!ClasspathConfig.COMPILER_JAR.exists()) {
-                throw new CompilerException("Javac jar file not found: " + ClasspathConfig.COMPILER_JAR.getAbsolutePath());
+            if (!ClasspathConfig.getCompilerJar().exists()) {
+                throw new CompilerException("Javac jar file not found: " + ClasspathConfig.getCompilerJar().getAbsolutePath());
             }
-            /*
-            ClassLoader javacClassLoader = new DelegateLastClassLoader(
-                    new URL[] { ClasspathConfig.COMPILER_JAR.toURI().toURL() });
-            */
+
             ClassLoader javacClassLoader = new DelegateLastClassLoader(
                     ((URLClassLoader)getClass().getClassLoader()).getURLs() );
 
@@ -876,7 +761,6 @@ public class JavacJSR308Compiler
             thread.setContextClassLoader( javacClassLoader );
             try
             {
-                //return Class.forName( JavacJSR308Compiler.JAVAC_CLASSNAME, true, javacClassLoader );
                 return javacClassLoader.loadClass( JavacJSR308Compiler.JAVAC_CLASSNAME );
             }
             finally
@@ -884,18 +768,10 @@ public class JavacJSR308Compiler
                 thread.setContextClassLoader( contextClassLoader );
             }
         }
-        /*
-        catch ( MalformedURLException ex )
-        {
-            throw new CompilerException(
-                "Could not convert the file reference to tools.jar to a URL, path to tools.jar: '"
-                    + ClasspathConfig.COMPILER_JAR.getAbsolutePath() + "'.", ex );
-        }
-        */
         catch ( ClassNotFoundException ex )
         {
             throw new CompilerException( "Unable to locate the javac compiler in " 
-                    + ClasspathConfig.COMPILER_JAR.getAbsolutePath(), ex );
+                    + ClasspathConfig.getCompilerJar().getAbsolutePath(), ex );
         }
     }
 

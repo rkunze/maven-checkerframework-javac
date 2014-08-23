@@ -191,9 +191,9 @@ public class JavacJSR308CompilerTest
         // classpath (automatically added by JavacJSR308Compiler)
         expectedArguments.add("-Xbootclasspath/p:" 
                 + ClasspathConfig.getAnnotatedJDK(System.getProperty("java.version")).getAbsolutePath()
-                + PS + ClasspathConfig.COMPILER_JAR.getAbsolutePath() + PS );
+                + PS + ClasspathConfig.getCompilerJar().getAbsolutePath() + PS );
         expectedArguments.add( "-classpath" );
-        expectedArguments.add( ClasspathConfig.CHECKER_JAR.getAbsolutePath() + PS );
+        expectedArguments.add( ClasspathConfig.getCheckerJar().getAbsolutePath() + PS );
         
         // targetVersion
         compilerConfiguration.setTargetVersion( "1.7" );
@@ -258,7 +258,7 @@ public class JavacJSR308CompilerTest
         // Bootstrap classpath for the annotated JDK and the JSR308 javac
         expectedArguments.add("-Xbootclasspath/p:" 
                 + ClasspathConfig.getAnnotatedJDK(System.getProperty("java.version")).getAbsolutePath()
-                + PS + ClasspathConfig.COMPILER_JAR.getAbsolutePath() + PS);
+                + PS + ClasspathConfig.getCompilerJar().getAbsolutePath() + PS);
         
         // classpathEntires
 
@@ -272,7 +272,7 @@ public class JavacJSR308CompilerTest
 
         expectedArguments.add( "-classpath" );
 
-        expectedArguments.add( ClasspathConfig.CHECKER_JAR.getAbsolutePath() + PS + "/myjar1.jar" + PS + "/myjar2.jar" + PS );
+        expectedArguments.add( ClasspathConfig.getCheckerJar().getAbsolutePath() + PS + "/myjar1.jar" + PS + "/myjar2.jar" + PS );
 
         // sourceRoots
 
