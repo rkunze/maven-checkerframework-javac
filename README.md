@@ -10,9 +10,10 @@ Usage
 * Configure the maven compiler plugin to use the "javac+jsr308" compiler provided by maven-checkerframework-javac
 * Enable the desired annotation processors from the checker framework
 
-Exampke POM Snippet
+Example POM Snippet
 ----------------------------
 
+````
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-compiler-plugin</artifactId>
@@ -32,3 +33,4 @@ Exampke POM Snippet
         </dependency>
     </dependencies>
 </plugin>
+````
