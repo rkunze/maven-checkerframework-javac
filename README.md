@@ -22,7 +22,7 @@ Example POM Snippet
         <compilerId>javac+jsr308</compilerId>
         <annotationProcessors>
             <processor>org.checkerframework.checker.nullness.NullnessChecker</processor>
-            <processor>org.checkerframework.checker.interning.InterningChecker</processor>                        
+            <processor>org.checkerframework.checker.interning.InterningChecker</processor>
         </annotationProcessors>
     </configuration>
     <dependencies>
