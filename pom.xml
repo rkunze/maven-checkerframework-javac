@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.rkunze.maven</groupId>
     <artifactId>maven-jsr308-javac</artifactId>
-    <version>1.8.4-SNAPSHOT</version>
+    <version>1.8.4-1</version>
 
     <name>Javac with JSR-308 Maven Support</name>
     <description>JSR-308 enabled Javac Compiler support for Maven compiler plugin.</description>
