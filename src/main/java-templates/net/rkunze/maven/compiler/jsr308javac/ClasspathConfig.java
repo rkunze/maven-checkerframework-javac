@@ -48,7 +48,7 @@ public class ClasspathConfig {
         if (basedir == null) {
             basedir = System.getProperty("user.home") + File.separator + ".m2" + File.separator + "repository";
         }
-        return new File(basedir + File.separator + artifact.replace("${file.separator}", File.separator));
+        return new File(basedir + File.separator + artifact.replace("/", File.separator));
     }
     
     static File getCompilerJar() { return repositoryPath("${org.checkerframework:compiler:jar.relative.repository}"); }
