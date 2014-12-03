@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.rkunze.maven</groupId>
     <artifactId>maven-checkerframework-javac</artifactId>
-    <version>1.8.7-1</version>
+    <version>1.8.8-1</version>
     <name>Maven support for the checker framework</name>
     <description>Maven support for the "checker framework" (http://types.cs.washington.edu/checker-framework/) JSR-308 enabled javac compiler.</description>
     <properties>
-        <checker-framework.version>1.8.7</checker-framework.version>
+        <checker-framework.version>1.8.8</checker-framework.version>
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
