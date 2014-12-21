@@ -478,7 +478,7 @@ public class JavacJSR308CompilerTest
     {
         List<String> cp = getClasspath();
 
-        File file = getLocalArtifactPath( "org.checkerframework", "checker-qual", "1.8.3", "jar" );
+        File file = getLocalArtifactPath( "org.checkerframework", "checker-qual", "1.8.8", "jar" );
 
         assertTrue( "test prerequisite: checker-qual library must be available in local repository, expected "
                         + file.getAbsolutePath(), file.canRead() );
