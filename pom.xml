@@ -70,13 +70,20 @@
           <resource>
             <directory>src/main/java-templates</directory>
             <filtering>true</filtering>
-            <targetPath>../generated-sources/filtered</targetPath>
+            <targetPath>../generated-sources/main</targetPath>
           </resource>
           <resource>
             <directory>src/main/resources</directory>
             <filtering>true</filtering>
           </resource>
         </resources>
+        <testResources>
+          <testResource>
+            <directory>src/test/java-templates</directory>
+            <filtering>true</filtering>
+            <targetPath>../generated-sources/test</targetPath>
+          </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -84,11 +91,22 @@
                 <version>1.9</version>
                 <executions>
                     <execution>
+                        <id>generate.main</id>
                         <phase>generate-sources</phase>
                         <goals><goal>add-source</goal></goals>
                         <configuration>
                             <sources>
-                                <source>target/generated-sources/filtered</source>
+                                <source>target/generated-sources/main</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate.tests</id>
+                        <phase>generate-test-sources</phase>
+                        <goals><goal>add-test-source</goal></goals>
+                        <configuration>
+                            <sources>
+                                <source>target/generated-sources/test</source>
                             </sources>
                         </configuration>
                     </execution>

@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.TreeSet;
 import static junit.framework.Assert.assertEquals;
 import static org.codehaus.plexus.PlexusTestCase.getBasedir;
-import static org.codehaus.plexus.compiler.AbstractCompiler.getPathString;
 import org.codehaus.plexus.compiler.CompilerException;
 import org.codehaus.plexus.compiler.CompilerMessage;
 import org.codehaus.plexus.util.FileUtils;
@@ -478,7 +477,7 @@ public class JavacJSR308CompilerTest
     {
         List<String> cp = getClasspath();
 
-        File file = getLocalArtifactPath( "org.checkerframework", "checker-qual", "1.8.8", "jar" );
+        File file = getLocalArtifactPath( "org.checkerframework", "checker-qual", "${checker-framework.version}", "jar" );
 
         assertTrue( "test prerequisite: checker-qual library must be available in local repository, expected "
                         + file.getAbsolutePath(), file.canRead() );
